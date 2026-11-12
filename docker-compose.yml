@@ -1,0 +1,24 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: reconciliation
+      POSTGRES_USER: recon
+      POSTGRES_PASSWORD: recon
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U recon -d reconciliation"]
+      interval: 5s
+      retries: 10
+
+  api:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg://recon:recon@postgres:5432/reconciliation
+      JWT_SECRET: local-dev-secret-that-is-at-least-32-bytes
+    ports:
+      - "8000:8000"
